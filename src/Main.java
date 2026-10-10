@@ -3,12 +3,13 @@ import java.util.*;
 void main() {
     Scanner scanner = new Scanner(System.in);
     Map<String, List<Character>> map = null;
+    List<Character> closure = null;
     boolean inputFD = true;
     while (inputFD) {
         System.out.println("Please input a list of Functional Dependencies, separated by commas: ");
         String fdString = scanner.nextLine().toUpperCase();
         //this if statement might need to be moved to the function
-        if (fdString.isEmpty() || fdString.equals("\n")) {
+        if (!fdString.isEmpty()) {
             map = simplifyAndMap(fdString);
             if(map != null) {
                 inputFD = false;
@@ -21,11 +22,12 @@ void main() {
     while (inputClosure){
         System.out.println("Input attributes of closure to compute: ");
         String clString = scanner.nextLine().toUpperCase();
-        if (clString.isEmpty() || clString.equals("\n")) {
-                //maybe there is a way to make a condition so that if compute closure returns properly then input closure will be set false automatically.
-                computeClosure(clString, map);
-                inputClosure = false;
-
+        if (!clString.isEmpty()) {
+                closure = computeClosure(clString, map);
+                if(closure != null) {
+                    System.out.printf("Closure: %s", closure);
+                    inputClosure = false;
+                }
         } else {
             System.out.println("ERROR: Invalid input, please try again");
         }
@@ -74,27 +76,69 @@ List<Character> computeClosure(String att, Map<String, List<Character>> map){
     List<Character> tempList = new ArrayList<>();
     List<Character> closure = new ArrayList<>();
     //in case the user inputs more than one character, make into an alphabetic array of chars, sorted
-    String[] temp = att.matches("^[a-zA-Z]+$")? att.strip()
+    char[] temp = att.matches("^[a-zA-Z]+$")? att.strip()
                                                         .chars()
                                                         .sorted()
                                                         .mapToObj(c -> String.valueOf((char) c))
                                                         .distinct()
-                                                        .collect(Collectors.joining()).split(""): null;
+                                                        .collect(Collectors.joining()).toCharArray(): null;
     if(temp == null){
         System.out.println("ERROR: Invalid input, must be alphabetic");
         return null;
     }
-    for(int i = 0; i < temp.length; i ++){
-        if(map.containsKey(temp[i])){
-            //gets the array list at the given key, iterates through list and adds attributes to the closure.
-            tempList.addAll(map.get(temp[i]));
-            closure.addAll(tempList.stream()
-                    .distinct()
-                    .toList());
+
+    for (char c : temp) {
+        if (!closure.contains(c)) {
+            closure.add(c);
+        }
+    }
+    boolean changed = true;
+
+    while (changed) {
+        changed = false;
+
+        // Check each functional dependency
+        for (String lhs : map.keySet()) {
+            boolean containsAll = true;
+
+            // Check whether all LHS attributes are in closure, add them all to closure if not
+            for (char c : lhs.toCharArray()) {
+                if (!closure.contains(c)) {
+                    containsAll = false;
+                    break;
+                }
+            }
+
+            // Check all attributes now in closure, If LHS is contained, add RHS attributes
+            if (containsAll) {
+                for (char c : map.get(lhs)) {
+                    if (!closure.contains(c)) {
+                        closure.add(c);
+                        changed = true;
+                    }
+                }
+            }
         }
     }
 
+    //Return the completed closure
+    closure.sort(null);
+    return closure;
 }
+
+
+
+//    for(int i = 0; i < temp.length; i ++){
+//        if(map.containsKey(temp[i])){
+//            //gets the array list at the given key, iterates through list and adds attributes to the closure.
+//            tempList.addAll(map.get(temp[i]));
+//            closure.addAll(tempList.stream()
+//                    .distinct()
+//                    .toList());
+//        }
+//    }
+//
+//}
 //
 //destinationList.addAll(
 //        sourceList.stream()
