@@ -47,7 +47,7 @@ Map<String, List<Character>> simplifyAndMap(String fd){
         //rm whitespace
         elmt = elmt.strip();
         //if elmt doesnt have -> or does not contain a RHS or LHS, throw error
-        if(!elmt.contains("->") || elmt.charAt(elmt.length()-1) == '>' || elmt.charAt(0) == '-'){
+        if(!elmt.matches("[A-Z]+->[A-Z]+")){
             System.out.printf("ERROR: Invalid input at \"%s\" , please try again\n", elmt);
             FDColl.clear();
             return null;
@@ -61,7 +61,8 @@ Map<String, List<Character>> simplifyAndMap(String fd){
             for (int i = 0; i < stripped[1].length(); i++) {
                 charList.add(stripped[1].charAt(i));
             }
-            FDColl.put(stripped[0], charList);
+            FDColl.computeIfAbsent(stripped[0], k -> new ArrayList<>())
+                    .addAll(charList);
         }
         else{
             System.out.println("ERROR: Invalid input, must be alphabetic");
