@@ -1,39 +1,68 @@
 import java.util.*;
 
-void main() {
-    Scanner scanner = new Scanner(System.in);
-    Map<String, List<Character>> map = null;
-    List<Character> closure = null;
-    boolean inputFD = true;
-    while (inputFD) {
-        System.out.println("Please input a list of Functional Dependencies, separated by commas: ");
-        String fdString = scanner.nextLine().toUpperCase();
-        //this if statement might need to be moved to the function
-        if (!fdString.isEmpty()) {
-            map = simplifyAndMap(fdString);
-            if(map != null) {
-                inputFD = false;
-            }
-        } else {
-            System.out.println("ERROR: Invalid input, please try again");
-        }
-    }
-    boolean inputClosure = true;
-    while (inputClosure){
-        System.out.println("Input attributes of closure to compute: ");
-        String clString = scanner.nextLine().toUpperCase();
-        if (!clString.isEmpty()) {
-                closure = computeClosure(clString, map);
-                if(closure != null) {
-                    System.out.printf("Closure: %s", closure);
-                    inputClosure = false;
+void main(){
+        Scanner scanner = new Scanner(System.in);
+        Map<String, List<Character>> map = null;
+        List<Character> closure = null;
+        boolean inputFD = true;
+        while (inputFD) {
+            System.out.println("Please input a list of Functional Dependencies, separated by commas: ");
+            String fdString = scanner.nextLine().toUpperCase();
+            //this if statement might need to be moved to the function
+            if (!fdString.isEmpty()) {
+                map = simplifyAndMap(fdString);
+                if (map != null) {
+                    inputFD = false;
                 }
-        } else {
-            System.out.println("ERROR: Invalid input, please try again");
+            } else {
+                System.out.println("ERROR: Invalid input, please try again");
+            }
         }
+        String clString;
+        boolean inputClosure = true;
+        while (inputClosure) {
+            System.out.println("Compute Closure [1] or Check if FD follows from FD Set [2]: ");
+            String inString = scanner.nextLine().toUpperCase();
+            if (!inString.isEmpty()) {
+                if (inString.equals("1")) {
+                    System.out.println("Input attributes of closure to compute: ");
+                    clString = scanner.nextLine().toUpperCase();
+                    if (!clString.isEmpty()) {
+                        closure = computeClosure(clString, map);
+                        if (closure != null) {
+                            System.out.printf("Closure: %s", closure);
+                            inputClosure = false;
+                        }
+                    } else {
+                        System.out.println("ERROR: Invalid input, please try again");
+                    }
+                } else if (inString.equals("2")) {
+                    System.out.println("Enter a functional dependency to determine its validity in the Input Set: ");
+                    clString = scanner.nextLine().toUpperCase();
+                    if (!clString.isEmpty() && clString.contains("->")) {
+                        clString = clString.strip();
+                        String[] attributes = clString.split("->");
+                        closure = computeClosure(attributes[0], map);
+                        boolean follows = true;
+                        for (char c : attributes[1].toCharArray()) {
+                            if (!closure.contains(c)) {
+                                follows = false;
+                            }
+                        }
 
+                        System.out.println(
+                                follows ? "FD follows from the input set." : "It's true!"
+                        );
+
+                        inputClosure = false;
+                    }
+                }
+            }
+
+
+        }
     }
-}
+
 
 //program must take as in put a string of functional dependencies, separated by commas.
 //function inputs LHS as key to Map, and its individual RHS attributes as its value
@@ -78,11 +107,11 @@ List<Character> computeClosure(String att, Map<String, List<Character>> map){
     List<Character> closure = new ArrayList<>();
     //in case the user inputs more than one character, make into an alphabetic array of chars, sorted
     char[] temp = att.matches("^[a-zA-Z]+$")? att.strip()
-                                                        .chars()
-                                                        .sorted()
-                                                        .mapToObj(c -> String.valueOf((char) c))
-                                                        .distinct()
-                                                        .collect(Collectors.joining()).toCharArray(): null;
+            .chars()
+            .sorted()
+            .mapToObj(c -> String.valueOf((char) c))
+            .distinct()
+            .collect(Collectors.joining()).toCharArray(): null;
     if(temp == null){
         System.out.println("ERROR: Invalid input, must be alphabetic");
         return null;
